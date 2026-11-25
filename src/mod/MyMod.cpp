@@ -4,6 +4,12 @@
 
 #include <pl/Mod.hpp>
 
+// Jarvis HUD relies on ARM64 signatures, so it is only built for arm64-v8a.
+// The 32-bit build (armeabi-v7a) still loads, it just does nothing.
+#if defined(__aarch64__)
+#include "mod/Jarvis.hpp"
+#endif
+
 namespace clange_me {
 
 ClangeMeMod &ClangeMeMod::instance() {
@@ -52,12 +58,20 @@ bool ClangeMeMod::enable() {
     }
 
     self.getLogger().info("Config message: {}", mConfig.message);
+
+#if defined(__aarch64__)
+    jarvis::start(std::string("jarvis"), self.getConfigDir());
+#else
+    self.getLogger().warn("Jarvis HUD needs a 64-bit (arm64-v8a) game build");
+#endif
     return true;
 }
 
 bool ClangeMeMod::disable() {
     getSelf().getLogger().debug("Disabling...");
-    // Undo enable-time state here.
+#if defined(__aarch64__)
+    jarvis::stop();
+#endif
     return true;
 }
 
